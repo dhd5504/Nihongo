@@ -4,7 +4,7 @@ import { getLesson, getUserProgress } from "~/db/queries";
 
 import { Quiz } from "~/lesson/quiz";
 import FlashcardSet from "~/lesson/flashcard";
-import { NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { useEffect, useState } from "react";
 import { SessionKey, SessionStorage } from "~/utils/session-storage";
 import { manualParsedCoolies } from "~/utils/JWTService";
@@ -18,9 +18,51 @@ export enum LESSON_TYPE {
   MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
 }
 
-const LessonIdPage: NextPage = ({ lesson, type, lessonId, state }) => {
+type ChallengeOption = {
+  id: number | string;
+  challengeId: number | string;
+  option: string;
+  isCorrect: boolean;
+  imageSrc?: string;
+  audioSrc?: string;
+  [key: string]: unknown;
+};
+
+type LessonChallenge = {
+  id: number | string;
+  challengeId: number | string;
+  text: string;
+  correct: string;
+  question?: string;
+  imageSrc?: string;
+  audioSrc?: string;
+  challengeOptions: ChallengeOption[];
+  completed: boolean;
+  type: string;
+  [key: string]: unknown;
+};
+
+type Flashcard = {
+  id: number;
+  word: string;
+  meaning: string;
+};
+
+type LessonPageProps = {
+  lesson: LessonChallenge[] | Flashcard[];
+  type: string;
+  lessonId: string;
+  state?: string;
+};
+
+const LessonIdPage: NextPage<LessonPageProps> = ({
+  lesson,
+  type,
+  lessonId,
+  state,
+}) => {
   if (type === LESSON_TYPE.FLASHCARD) {
-    return <FlashcardSet initFlashCards={lesson} />;
+    return <FlashcardSet initFlashCards={lesson as Flashcard[]} />;
   }
 
   if (lesson.length === 0) {
@@ -47,7 +89,7 @@ const LessonIdPage: NextPage = ({ lesson, type, lessonId, state }) => {
     );
   }
 
-  const challenges = lesson;
+  const challenges = lesson as LessonChallenge[];
 
   console.log(challenges);
 
@@ -67,12 +109,18 @@ const LessonIdPage: NextPage = ({ lesson, type, lessonId, state }) => {
             ...challenge,
             id: Number(challenge.id),
             challengeId: Number(challenge.challengeId),
+            imageSrc: challenge.imageSrc ?? "",
+            audioSrc: challenge.audioSrc ?? "",
             challengeOptions: challenge.challengeOptions.map((option) => ({
               ...option,
+              id: Number(option.id),
               challengeId: Number(challenge.challengeId),
-              imageSrc: challenge.imageSrc,
-              audioSrc: challenge.audioSrc,
+              option: String(option.option),
+              isCorrect: Boolean(option.isCorrect),
+              imageSrc: option.imageSrc ?? "",
+              audioSrc: option.audioSrc ?? "",
             })),
+            type: String(challenge.type),
           }))}
           initialPercentage={initialPercentage}
           isTest={state === LESSON_TYPE.TEST}
@@ -85,8 +133,12 @@ const LessonIdPage: NextPage = ({ lesson, type, lessonId, state }) => {
 
 export default LessonIdPage;
 
-export async function getServerSideProps({ req, params, query }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({
+  req,
+  params,
+  query,
+}: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 
@@ -104,17 +156,28 @@ export async function getServerSideProps({ req, params, query }) {
     id: number;
   }>(myCookie);
 
-  const { lessonId } = params; // Access the dynamic route parameter
-  const { type, state } = query;
+  const lessonId = params?.lessonId;
+  if (!lessonId || Array.isArray(lessonId)) {
+    return {
+      notFound: true,
+    };
+  }
 
-  const lesson = await getLesson(Number(lessonId), jwtPayload.id, String(type));
+  const typeParam = Array.isArray(query.type) ? query.type[0] : query.type;
+  const stateParam = Array.isArray(query.state) ? query.state[0] : query.state;
+
+  const lesson = await getLesson(
+    Number(lessonId),
+    jwtPayload.id,
+    String(typeParam ?? ""),
+  );
 
   return {
     props: {
       lesson,
-      type,
+      type: typeParam ?? "",
       lessonId,
-      state: state ?? "",
+      state: stateParam ?? "",
     },
   };
 }

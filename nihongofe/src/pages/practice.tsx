@@ -1,5 +1,5 @@
 import { FeedWrapper } from "~/components/feedwrapper";
-import { getPracticeUnit, getUnits } from "~/db/queries";
+import { getPracticeUnit, getUnits, type Unit } from "~/db/queries";
 import { Header } from "~/components/header";
 import { UnitBanner } from "~/components/unit-banner";
 import { Quiz } from "~/lesson/quiz";
@@ -7,13 +7,39 @@ import { BottomBar } from "~/components/BottomBar";
 import { LeftBar } from "~/components/LeftBar";
 import { RightBar } from "~/components/RightBar";
 import { TopBar } from "~/components/TopBar";
-import { NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { manualParsedCoolies } from "~/utils/JWTService";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 
 type Props = {
   children: React.ReactNode;
+};
+
+type PracticeChallenge = {
+  id: number | string;
+  challengeId: number | string;
+  text: string;
+  correct: string;
+  question?: string;
+  imageSrc?: string;
+  audioSrc?: string;
+  challengeOptions: {
+    id: number | string;
+    challengeId: number | string;
+    option: string;
+    isCorrect: boolean;
+    imageSrc?: string;
+    audioSrc?: string;
+  }[];
+  completed: boolean;
+  type: string;
+};
+
+type PracticePageProps = {
+  practiceLessons: PracticeChallenge[];
+  practices: Unit[];
+  unitId: string | null;
 };
 
 const PracticeLayout = ({ children }: Props) => {
@@ -34,8 +60,12 @@ const PracticeLayout = ({ children }: Props) => {
   );
 };
 
-const PracticePage: NextPage = ({ practiceLessons, practices, unitId }) => {
-  if (practiceLessons) {
+const PracticePage: NextPage<PracticePageProps> = ({
+  practiceLessons,
+  practices,
+  unitId,
+}) => {
+  if (unitId) {
     return (
       <PracticeLayout>
         <div className="flex flex-1 flex-col md:ml-32 lg:ml-64">
@@ -65,10 +95,18 @@ const PracticePage: NextPage = ({ practiceLessons, practices, unitId }) => {
                 ...challenge,
                 id: Number(challenge.id),
                 challengeId: Number(challenge.id),
-                challengeOptions: challenge.challengeOptions.map((option) => ({
+                imageSrc: challenge.imageSrc ?? "",
+                audioSrc: challenge.audioSrc ?? "",
+                challengeOptions: (challenge.challengeOptions ?? []).map((option) => ({
                   ...option,
+                  id: Number(option.id),
                   challengeId: Number(challenge.id),
+                  option: String(option.option),
+                  isCorrect: Boolean(option.isCorrect),
+                  imageSrc: option.imageSrc ?? "",
+                  audioSrc: option.audioSrc ?? "",
                 })),
+                type: String(challenge.type),
               }))}
               initialPercentage={
                 (practiceLessons.filter(
@@ -77,6 +115,8 @@ const PracticePage: NextPage = ({ practiceLessons, practices, unitId }) => {
                   practiceLessons.length) *
                 100
               }
+              isLesson={false}
+              isTest={false}
               isPractice={true}
             />
           )}
@@ -109,8 +149,11 @@ const PracticePage: NextPage = ({ practiceLessons, practices, unitId }) => {
 
 export default PracticePage;
 
-export async function getServerSideProps({ query, req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({
+  query,
+  req,
+}: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 
@@ -128,19 +171,21 @@ export async function getServerSideProps({ query, req }) {
     id: number;
   }>(myCookie);
 
-  const { unitId } = query; // Access searchParams
+  const unitIdParam = Array.isArray(query.unitId)
+    ? query.unitId[0]
+    : query.unitId; // Access searchParams
 
-  if (unitId) {
+  if (unitIdParam) {
     const practiceLessons = await getPracticeUnit(
       jwtPayload.id,
-      Number(unitId.toString()),
+      Number(unitIdParam.toString()),
     );
 
     return {
       props: {
-        practiceLessons,
-        practices: null,
-        unitId,
+        practiceLessons: practiceLessons ?? [],
+        practices: [],
+        unitId: unitIdParam,
       },
     };
   }
@@ -149,8 +194,8 @@ export async function getServerSideProps({ query, req }) {
 
   return {
     props: {
-      practiceLessons: null,
-      practices,
+      practiceLessons: [],
+      practices: practices ?? [],
       unitId: null,
     },
   };

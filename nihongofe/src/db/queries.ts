@@ -5,6 +5,23 @@ const API_BASE_URL = "http://localhost:8080";
 
 axios.defaults.withCredentials = true;
 
+export type Lesson = {
+  id: number;
+  order: number;
+  name: string;
+  type: string;
+  status: string;
+};
+
+export type Unit = {
+  id: number;
+  displayOrder: number;
+  title: string;
+  description: string;
+  level: string;
+  lessons: Lesson[];
+};
+
 export const getPractices = () => {
   return;
 };
@@ -103,7 +120,7 @@ export const updateStatusLesson = async (lessonId: number, userId: number) => {
       `${API_BASE_URL}/api/units/update-status?userId=${userId}&lessonId=${lessonId}`,
     );
   } catch (error) {
-    if (error.status === 400) {
+    if (axios.isAxiosError(error) && error.response?.status === 400) {
       return null;
     }
     console.log("Error updating lesson status:", error);
@@ -111,25 +128,12 @@ export const updateStatusLesson = async (lessonId: number, userId: number) => {
   }
 };
 
-export const getUnits = async (userId: number) => {
+export const getUnits = async (userId: number): Promise<Unit[]> => {
   try {
-    const response = await axios.get<{
-      units: {
-        id: number;
-        displayOrder: number;
-        title: string;
-        description: string;
-        level: string;
-        lessons: {
-          id: number;
-          order: number;
-          name: string;
-          type: string;
-          status: string;
-        }[];
-      }[];
-    }>(`${API_BASE_URL}/api/units?userId=${userId}`);
-    return response.data;
+    const response = await axios.get<Unit[]>(
+      `${API_BASE_URL}/api/units?userId=${userId}`,
+    );
+    return response.data ?? [];
   } catch (error) {
     console.error("Error fetching units:", error);
     throw error;
@@ -140,8 +144,8 @@ export const getLessonById = async (lessonId: number) => {
   return response.data;
 };
 
-export const getCurrentLesson = async () => {
-  const units = await getUnits();
+export const getCurrentLesson = async (userId: number) => {
+  const units = await getUnits(userId);
   const currentLesson = units
     .flatMap((unit: { lessons: any[] }) => unit.lessons)
     .find((lesson: { status: string }) => lesson.status === "current");
@@ -150,8 +154,8 @@ export const getCurrentLesson = async () => {
   return await getLessonById(currentLesson.id);
 };
 
-export const getPreviousLessons = async () => {
-  const units = await getUnits();
+export const getPreviousLessons = async (userId: number) => {
+  const units = await getUnits(userId);
   const lessons = units.flatMap((unit: { lessons: any[] }) => unit.lessons);
   const currentLesson = lessons.find(
     (lesson: { status: string }) => lesson.status === "current",
@@ -162,8 +166,8 @@ export const getPreviousLessons = async () => {
   );
 };
 
-export const getPracticeChallenges = async () => {
-  const previousLessons = await getPreviousLessons();
+export const getPracticeChallenges = async (userId: number) => {
+  const previousLessons = await getPreviousLessons(userId);
   const challenges = [];
   for (const lesson of previousLessons) {
     const lessonDetails = await getLessonById(lesson.id);
@@ -177,7 +181,7 @@ export const getPracticeChallenges = async () => {
 };
 
 export const isLessonCompleted = async (lessonId: number, userId: number) => {
-  const units = await getUnits();
+  const units = await getUnits(userId);
   const lesson = units
     .flatMap((unit: { lessons: any[] }) => unit.lessons)
     .find((lesson: { id: number; status: string }) => lesson.id === lessonId);
