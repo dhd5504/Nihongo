@@ -8,6 +8,7 @@ import { checkNewUser, signin, signup } from "~/db/queries";
 import Fetching from "./Fetching";
 import { useToast } from "~/context/toast";
 import { getIdUserByToken } from "~/utils/JWTService";
+import { isAxiosError } from "axios";
 
 export const GoogleLogoSvg = (props: ComponentProps<"svg">) => {
   return (
@@ -73,11 +74,23 @@ export const LoginScreen = ({
     age: string;
     email: string;
     password: string;
+    confirmPassword: string;
   }>({
     username: "",
     age: "",
     email: "",
     password: "",
+    confirmPassword: "",
+  });
+
+  const [errors, setErrors] = useState<{
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }>({
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,12 +104,30 @@ export const LoginScreen = ({
 
   const logInAndSetUserProperties = async () => {
     if (loginScreenState === "SIGNUP") {
+      setErrors({
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email.trim())) {
+        setErrors((prev) => ({ ...prev, email: "Email không hợp lệ" }));
+        return;
+      }
       const passwordRegex = /^(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
       if (!passwordRegex.test(form.password)) {
-        addToast(
-          "Mật khẩu phải có ít nhất 8 ký tự và bao gồm ít nhất 1 ký tự đặc biệt (!@#$%^&*)",
-          "error",
-        );
+        setErrors((prev) => ({
+          ...prev,
+          password:
+            "Mật khẩu phải có ít nhất 8 ký tự và bao gồm ít nhất 1 ký tự đặc biệt (!@#$%^&*)",
+        }));
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Mật khẩu và nhập lại mật khẩu không khớp",
+        }));
         return;
       }
       try {
@@ -105,6 +136,26 @@ export const LoginScreen = ({
         addToast("Đăng ký thành công", "success");
         void router.push("/");
       } catch (error) {
+        if (isAxiosError(error)) {
+          if (error.response?.status === 409) {
+            setErrors((prev) => ({
+              ...prev,
+              email: "Email đã được đăng ký",
+            }));
+            return;
+          }
+          if (error.response?.data?.message) {
+            const message = String(error.response.data.message);
+            setErrors((prev) => ({
+              ...prev,
+              email:
+                message === "Tên đăng nhập đã tồn tại."
+                  ? "Email đã được đăng ký"
+                  : message,
+            }));
+            return;
+          }
+        }
         addToast(String(error), "error");
       } finally {
         setForm({
@@ -112,6 +163,7 @@ export const LoginScreen = ({
           age: "",
           email: "",
           password: "",
+          confirmPassword: "",
         });
         setLoading(false);
       }
@@ -128,6 +180,7 @@ export const LoginScreen = ({
           age: "",
           email: "",
           password: "",
+          confirmPassword: "",
         });
         if (userId != null && !(await checkNewUser(userId))) {
           void router.push("/register");
@@ -185,7 +238,7 @@ export const LoginScreen = ({
                 <div className="relative flex grow">
                   <input
                     className="grow rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-3"
-                    placeholder="First Name (optional)"
+                    placeholder="Họ và tên"
                     value={form.age}
                     onChange={(e) =>
                       setForm({
@@ -223,7 +276,7 @@ export const LoginScreen = ({
                 </div>
                 <input
                   className="grow rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-3"
-                  placeholder="Name (optional)"
+                  placeholder="Tên đăng nhập"
                   ref={nameInputRef}
                   value={form.username}
                   onChange={(e) =>
@@ -244,12 +297,15 @@ export const LoginScreen = ({
               }
               value={form.email}
               onChange={(e) =>
-                setForm({
-                  ...form,
-                  email: e.target.value,
-                })
-              }
-            />
+                  setForm({
+                    ...form,
+                    email: e.target.value,
+                  })
+                }
+              />
+            {errors.email && (
+              <p className="mt-1 text-xs text-rose-500">{errors.email}</p>
+            )}
             <div className="relative flex grow">
               <input
                 className="grow rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-3"
@@ -257,12 +313,15 @@ export const LoginScreen = ({
                 type="password"
                 value={form.password}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    password: e.target.value,
-                  })
-                }
-              />
+                    setForm({
+                      ...form,
+                      password: e.target.value,
+                    })
+                  }
+                />
+              {errors.password && (
+                <p className="mt-1 text-xs text-rose-500">{errors.password}</p>
+              )}
               {loginScreenState === "LOGIN" && (
                 <div className="absolute bottom-0 right-0 top-0 flex items-center justify-center pr-5">
                   <Link
@@ -274,6 +333,27 @@ export const LoginScreen = ({
                 </div>
               )}
             </div>
+            {loginScreenState === "SIGNUP" && (
+              <div className="relative flex grow">
+                <input
+                  className="grow rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-3"
+                  placeholder="Nhập lại mật khẩu"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-xs text-rose-500">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <button
             className="rounded-2xl border-b-4 border-blue-500 bg-blue-400 py-3 font-bold uppercase text-white transition hover:brightness-110"
@@ -299,23 +379,6 @@ export const LoginScreen = ({
               Chính sách bảo mật
             </Link>
             .
-          </p>
-          <p className="text-center text-xs leading-5 text-gray-400">
-            Trang web này được bảo vệ bởi reCAPTCHA Enterprise và Google{" "}
-            <Link
-              className="font-bold"
-              href="https://policies.google.com/privacy"
-            >
-              Chính sách bảo mật
-            </Link>{" "}
-            and{" "}
-            <Link
-              className="font-bold"
-              href="https://policies.google.com/terms"
-            >
-              Điều khoản và dịch vụ
-            </Link>{" "}
-            áp dụng.
           </p>
           <p className="block text-center sm:hidden">
             <span className="text-sm font-bold text-gray-700">

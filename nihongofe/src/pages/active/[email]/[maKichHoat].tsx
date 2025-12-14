@@ -16,7 +16,8 @@ function AccountActive() {
     console.log("Email:", email);
     console.log("MaKichHoat:", maKichHoat);
     try {
-      const url: string = `https://nihongo-nhom26-latest.onrender.com/account/active?email=${email}&activeNumber=${maKichHoat}`;
+      // const url: string = `https://nihongo-nhom26-latest.onrender.com/account/active?email=${email}&activeNumber=${maKichHoat}`;
+      const url: string = `http://localhost:8080/account/active?email=${email}&activeNumber=${maKichHoat}`;
       const response = await fetch(url, { method: "GET" });
 
       if (response.ok) {

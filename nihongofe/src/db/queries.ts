@@ -1,7 +1,8 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API_BASE_URL = "https://nihongo-nhom26-latest.onrender.com";
+// const API_BASE_URL = "https://nihongo-nhom26-latest.onrender.com";
+const API_BASE_URL = "http://localhost:8080";
 
 export const getPractices = () => {
   return;
