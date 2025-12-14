@@ -147,6 +147,10 @@ const ProfileStatsSection = ({ userXP }: { userXP: number }) => {
       }
       try {
         const token = await getTokenContract(provider);
+        if (!token || typeof token.balanceOf !== "function") {
+          setBalance("0");
+          return;
+        }
         const bal = await token.balanceOf(walletAddress);
         // Format to whole numbers for display simplicity
         const formatted = ethers.formatUnits(bal, 18).split(".")[0];

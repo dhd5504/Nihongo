@@ -14,7 +14,6 @@ import { useRouter } from "next/router";
 import React from "react";
 import { useWalletStore } from "~/stores/useWalletStore";
 import { getShopContract } from "~/utils/contracts";
-import { ethers } from "ethers";
 
 const Account: NextPage<{
   profile: UserData;
@@ -173,6 +172,9 @@ const AvatarFramesSelector = () => {
       if (!walletAddress || !provider) return;
       try {
         const shop = await getShopContract(provider);
+        if (!shop || typeof shop.hasPurchased !== "function") {
+          return;
+        }
         const owned = new Set<number>();
         for (const item of ITEMS) {
           const hasPurchased = await shop.hasPurchased(walletAddress, item.id);

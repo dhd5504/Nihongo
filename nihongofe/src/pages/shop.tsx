@@ -31,6 +31,9 @@ const Shop: NextPage = () => {
       if (!walletAddress || !provider) return;
       try {
         const shop = await getShopContract(provider);
+        if (!shop || typeof shop.hasPurchased !== "function") {
+          return;
+        }
         const owned = new Set<number>();
         for (const item of ITEMS) {
           const hasPurchased = await shop.hasPurchased(walletAddress, item.id);
@@ -56,7 +59,7 @@ const Shop: NextPage = () => {
       console.log("Token Address:", process.env.NEXT_PUBLIC_TOKEN_ADDRESS);
       console.log("Shop Address:", process.env.NEXT_PUBLIC_SHOP_ADDRESS);
 
-      if (network.chainId !== 11155111n) { // Sepolia ChainID
+      if (Number(network.chainId) !== 11155111) { // Sepolia ChainID
         addToast("Wrong Network! Please switch to Sepolia.", "error");
         return;
       }
@@ -64,6 +67,17 @@ const Shop: NextPage = () => {
       addToast("Checking balance & allowance...", "info");
       const token = await getTokenContract(provider);
       const shop = await getShopContract(provider);
+      if (
+        !token ||
+        typeof token.balanceOf !== "function" ||
+        typeof token.allowance !== "function" ||
+        typeof token.approve !== "function" ||
+        !shop ||
+        typeof shop.buyItem !== "function"
+      ) {
+        addToast("Contract not ready, please reconnect wallet.", "error");
+        return;
+      }
 
       // 0. Check Balance Logic
       const priceWei = ethers.parseUnits(price, 18);

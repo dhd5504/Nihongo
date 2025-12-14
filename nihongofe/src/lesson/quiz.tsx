@@ -13,7 +13,6 @@ import { useToast } from "~/context/toast";
 import { useWalletStore } from "~/stores/useWalletStore";
 import { getTokenContract } from "~/utils/contracts";
 import axios from "axios";
-import { ethers } from "ethers";
 import { useBoundStore } from "src/hooks/useBoundStore";
 
 import {
@@ -234,6 +233,10 @@ export const Quiz = ({
         addToast("Minting tokens...", "info");
 
         const contract = await getTokenContract(provider);
+        if (!contract || typeof contract.mintWithSignature !== "function") {
+          addToast("Contract not ready, please reconnect wallet.", "error");
+          return;
+        }
 
         const tx = await contract.mintWithSignature(
           amount,
