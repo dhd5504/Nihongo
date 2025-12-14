@@ -289,3 +289,14 @@ export const signin = async ({
   });
   return response.data;
 };
+
+export const addUserXp = async (
+  userId: number,
+  lessonId: number,
+  score: number,
+) => {
+  const response = await axios.post<number>(
+    `${API_BASE_URL}/api/user-progress/add-xp?userId=${userId}&lessonId=${lessonId}&score=${score}`,
+  );
+  return response.data;
+};

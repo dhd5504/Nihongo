@@ -11,7 +11,15 @@ import { NextPage } from "next";
 import { manualParsedCoolies } from "~/utils/JWTService";
 import { jwtDecode } from "jwt-decode";
 
-const LearnPage: NextPage = ({ userProgress, units }) => {
+const levelOrder: Record<string, number> = {
+  N5: 1,
+  N4: 2,
+  N3: 3,
+  N2: 4,
+  N1: 5,
+};
+
+const LearnPage: NextPage = ({ userProgress, units, level }) => {
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar />
@@ -25,6 +33,8 @@ const LearnPage: NextPage = ({ userProgress, units }) => {
             {units
               .sort(
                 (unitFirst, unitLast) =>
+                  (levelOrder[unitFirst.level] ?? 99) -
+                    (levelOrder[unitLast.level] ?? 99) ||
                   unitFirst.displayOrder - unitLast.displayOrder,
               )
               .map(
@@ -33,6 +43,7 @@ const LearnPage: NextPage = ({ userProgress, units }) => {
                   order: number;
                   description: string;
                   title: string;
+                  level: string;
                   lessons: {
                     id: number;
                     order: number;
@@ -100,6 +111,7 @@ export async function getServerSideProps({ req }) {
   const parsedCookies = manualParsedCoolies(cookies);
 
   const myCookie = parsedCookies["token"] || null;
+  const levelCookie = parsedCookies["level"] || null;
 
   if (!myCookie) {
     return {
@@ -118,6 +130,14 @@ export async function getServerSideProps({ req }) {
     getUnits(jwtPayload.id),
   ]);
 
+  const filteredUnits =
+    levelCookie != null && levelCookie !== ""
+      ? units.filter(
+          (unit: { level: string }) =>
+            unit.level?.toUpperCase() === levelCookie.toUpperCase(),
+        )
+      : units;
+
   if (!userProgress) {
     return {
       redirect: {
@@ -129,7 +149,8 @@ export async function getServerSideProps({ req }) {
   return {
     props: {
       userProgress,
-      units,
+      units: filteredUnits,
+      level: levelCookie ?? "",
     },
   };
 }

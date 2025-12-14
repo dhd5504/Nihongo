@@ -6,9 +6,12 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import Confetti from "react-confetti";
 import { useAudio, useWindowSize } from "react-use";
+import Cookies from "js-cookie";
 import { usePracticeModal } from "~/store/use-practice-modal";
+import { useBoundStore } from "src/hooks/useBoundStore";
 
 import {
+  addUserXp,
   updateQuestionRightAnswer,
   updateQuestionWrongAnswer,
   updateStatusLesson,
@@ -69,6 +72,7 @@ export const Quiz = ({
   const params = useParams();
   const [pending, startTransition] = useTransition();
   const { open: openPracticeModal } = usePracticeModal();
+  const increaseXp = useBoundStore((x) => x.increaseXp);
 
   useEffect(() => {
     if (initialPercentage === 100) openPracticeModal();
@@ -198,11 +202,28 @@ export const Quiz = ({
 
     await updateStatusLesson(Number(params.lessonId), Number(userId));
 
+    const passedTest = !(isTest && correctQuestions < challenges.length / 2);
+
+    // award XP: 10 per completed lesson when passed
+    if (userId && passedTest) {
+      try {
+        await addUserXp(Number(userId), Number(params.lessonId), 10);
+        increaseXp(10);
+      } catch (error) {
+        console.error("Failed to add XP:", error);
+      }
+    }
+
+    const level = Cookies.get("level");
     if (isPractice) {
       router.push("/practice");
-    } else {
-      router.push("/learn");
+      return;
     }
+    if (level) {
+      router.push(`/level?level=${level}`);
+      return;
+    }
+    router.push("/learn");
   };
 
   if (!challenge) {

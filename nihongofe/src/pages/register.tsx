@@ -1,5 +1,6 @@
 import type { NextPage } from "next";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import { LanguageHeader } from "src/components/LanguageHeader";
 import { setUserLevel } from "~/db/queries";
 import jlpt from "~/utils/jlpt";
@@ -11,6 +12,7 @@ const Register: NextPage = () => {
   const setLevel = (level: string) => {
     const userId = getIdUserByToken();
     if (userId) {
+      Cookies.set("level", level);
       setUserLevel(userId, level).then((result) => {
         if (result === "Update successful") {
           void router.push(`/level?level=${level}`);

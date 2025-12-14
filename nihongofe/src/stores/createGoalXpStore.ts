@@ -1,6 +1,6 @@
 import type { BoundStateCreator } from "~/hooks/useBoundStore";
 
-export type GoalXp = 1 | 10 | 20 | 30 | 50;
+export type GoalXp = 200 | 250 | 300 | 350 | 400;
 
 export type GoalXpSlice = {
   goalXp: GoalXp;
@@ -8,6 +8,6 @@ export type GoalXpSlice = {
 };
 
 export const createGoalXpSlice: BoundStateCreator<GoalXpSlice> = (set) => ({
-  goalXp: 10,
+  goalXp: 200,
   setGoalXp: (newGoalXp: GoalXp) => set({ goalXp: newGoalXp }),
 });

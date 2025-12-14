@@ -10,11 +10,11 @@ import { SettingsRightNav } from "~/components/SettingsRightNav";
 import {CoachSvg} from "~/components/Svgs";
 
 const goalXpOptions = [
-  { title: "Basic", xp: 1 },
-  { title: "Casual", xp: 10 },
-  { title: "Regular", xp: 20 },
-  { title: "Serious", xp: 30 },
-  { title: "Intense", xp: 50 },
+  { title: "Basic", xp: 200 },
+  { title: "Casual", xp: 250 },
+  { title: "Regular", xp: 300 },
+  { title: "Serious", xp: 350 },
+  { title: "Intense", xp: 400 },
 ] as const;
 
 const Coach: NextPage = () => {
