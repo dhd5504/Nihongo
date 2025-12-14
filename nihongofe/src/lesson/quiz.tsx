@@ -207,6 +207,17 @@ export const Quiz = ({
 
     await updateStatusLesson(Number(params.lessonId), Number(userId));
 
+    // Check if score is sufficient (must be 100%)
+    if (correctQuestions !== challenges.length) {
+      addToast("Bạn cần làm đúng 100% để nhận Token!", "error");
+      if (isPractice) {
+        router.push("/practice");
+      } else {
+        router.push("/learn");
+      }
+      return;
+    }
+
     if (walletAddress && provider) {
       try {
         addToast("Requesting signature...", "info");
@@ -231,8 +242,14 @@ export const Quiz = ({
         addToast("Tokens received!", "success");
       } catch (error: any) {
         console.error(error);
-        addToast("Minting failed: " + (error.message || "Unknown error"), "error");
+        if (error.response && error.response.status === 400 && error.response.data.error === "Lesson already rewarded") {
+          addToast("Bạn đã nhận thưởng bài này rồi!", "info");
+        } else {
+          addToast("Minting failed: " + (error.message || "Unknown error"), "error");
+        }
       }
+    } else {
+      addToast("Wallet not connected! No token reward.", "info");
     }
 
     if (isPractice) {

@@ -6,7 +6,10 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
@@ -71,7 +74,7 @@ app.post('/lesson/complete', async (req, res) => {
         // For now, let's just log it.
         if (db.users[wallet].includes(lessonId)) {
             console.log(`User ${wallet} already completed lesson ${lessonId}`);
-            // In a real app, maybe return error or 0 amount.
+            return res.status(400).json({ error: "Lesson already rewarded" });
         }
 
         // 2. Get Nonce from Contract

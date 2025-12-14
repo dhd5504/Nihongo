@@ -17,6 +17,8 @@ import {
 import { getProfile } from "~/db/queries";
 import { getToken, manualParsedCoolies } from "~/utils/JWTService";
 import { useWalletStore } from "~/stores/useWalletStore";
+import { getTokenContract } from "~/utils/contracts";
+import { ethers } from "ethers";
 
 // Define the type for the user data
 export interface UserData {
@@ -134,6 +136,28 @@ const ProfileStatsSection = ({ userXP }: { userXP: number }) => {
   const league = "Bronze";
   const top3Finishes = 0;
 
+  const { walletAddress, provider } = useWalletStore();
+  const [balance, setBalance] = useState<string>("0");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!walletAddress || !provider) {
+        setBalance("0");
+        return;
+      }
+      try {
+        const token = await getTokenContract(provider);
+        const bal = await token.balanceOf(walletAddress);
+        // Format to whole numbers for display simplicity
+        const formatted = ethers.formatUnits(bal, 18).split(".")[0];
+        setBalance(formatted || "0");
+      } catch (error) {
+        console.error("Failed to fetch balance", error);
+      }
+    };
+    fetchBalance();
+  }, [walletAddress, provider]);
+
   return (
     <section>
       <h2 className="mb-5 text-2xl font-bold">Thống kê</h2>
@@ -186,6 +210,17 @@ const ProfileStatsSection = ({ userXP }: { userXP: number }) => {
             </span>
           </div>
         </div>
+        {/* Token Balance */}
+        <div className="flex gap-2 rounded-2xl border-2 border-gray-200 p-2 md:gap-3 md:px-6 md:py-4 col-span-2 sm:col-span-1">
+          <div className="h-10 w-10 flex items-center justify-center rounded-full bg-yellow-100 text-2xl">🪙</div>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold">{balance} NIHON</span>
+            <span className="text-sm text-gray-400 md:text-base">
+              Token Balance
+            </span>
+          </div>
+        </div>
+
       </div>
     </section>
   );

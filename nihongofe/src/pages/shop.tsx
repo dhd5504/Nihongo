@@ -51,11 +51,30 @@ const Shop: NextPage = () => {
     }
 
     try {
-      addToast("Checking allowance...", "info");
+      const network = await provider.getNetwork();
+      console.log("Current Network:", network.chainId, network.name);
+      console.log("Token Address:", process.env.NEXT_PUBLIC_TOKEN_ADDRESS);
+      console.log("Shop Address:", process.env.NEXT_PUBLIC_SHOP_ADDRESS);
+
+      if (network.chainId !== 11155111n) { // Sepolia ChainID
+        addToast("Wrong Network! Please switch to Sepolia.", "error");
+        return;
+      }
+
+      addToast("Checking balance & allowance...", "info");
       const token = await getTokenContract(provider);
       const shop = await getShopContract(provider);
 
+      // 0. Check Balance Logic
       const priceWei = ethers.parseUnits(price, 18);
+      const balance = await token.balanceOf(walletAddress);
+
+      if (balance < priceWei) {
+        addToast("Không đủ token, hãy chăm chỉ luyện tập hơn nhé", "error");
+        return;
+      }
+
+      // 1. Check Allowance
       const allowance = await token.allowance(walletAddress, SHOP_ADDRESS);
 
       if (allowance < priceWei) {
