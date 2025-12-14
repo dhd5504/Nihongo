@@ -3,10 +3,16 @@
 import { useEffect, useState, useTransition } from "react";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Confetti from "react-confetti";
 import { useAudio, useWindowSize } from "react-use";
 import { usePracticeModal } from "~/store/use-practice-modal";
+import { useToast } from "~/context/toast";
+import { useWalletStore } from "~/stores/useWalletStore";
+import { getTokenContract } from "~/utils/contracts";
+import axios from "axios";
+import { ethers } from "ethers";
 
 import {
   updateQuestionRightAnswer,
@@ -193,10 +199,41 @@ export const Quiz = ({
     }
   };
 
+  const { addToast } = useToast();
+  const { walletAddress, provider } = useWalletStore();
+
   const handleCompleted = async () => {
     const userId = getIdUserByToken();
 
     await updateStatusLesson(Number(params.lessonId), Number(userId));
+
+    if (walletAddress && provider) {
+      try {
+        addToast("Requesting signature...", "info");
+        const response = await axios.post("http://localhost:3001/lesson/complete", {
+          wallet: walletAddress,
+          lessonId: Number(params.lessonId),
+        });
+
+        const { signature, amount, nonce } = response.data;
+        addToast("Minting tokens...", "info");
+
+        const contract = await getTokenContract(provider);
+
+        const tx = await contract.mintWithSignature(
+          amount,
+          nonce,
+          Number(params.lessonId),
+          signature,
+        );
+        addToast("Transaction sent...", "info");
+        await tx.wait();
+        addToast("Tokens received!", "success");
+      } catch (error: any) {
+        console.error(error);
+        addToast("Minting failed: " + (error.message || "Unknown error"), "error");
+      }
+    }
 
     if (isPractice) {
       router.push("/practice");

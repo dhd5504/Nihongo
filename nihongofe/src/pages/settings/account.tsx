@@ -11,6 +11,10 @@ import { UserData } from "../profile";
 import { useToast } from "~/context/toast";
 import Fetching from "~/components/Fetching";
 import { useRouter } from "next/router";
+import React from "react";
+import { useWalletStore } from "~/stores/useWalletStore";
+import { getShopContract } from "~/utils/contracts";
+import { ethers } from "ethers";
 
 const Account: NextPage<{
   profile: UserData;
@@ -133,10 +137,89 @@ const Account: NextPage<{
                 }
               />
             </div>
+            {/* Avatar Frames Selection */}
+            <div className="border-t-2 border-gray-100 pt-10 mt-5">
+              <h2 className="mb-5 text-xl font-bold">Avatar Frames</h2>
+              <AvatarFramesSelector />
+            </div>
+
           </div>
           <SettingsRightNav selectedTab="Tài khoản" />
         </div>
       </div>
+    </div>
+  );
+};
+
+const AvatarFramesSelector = () => {
+  const { walletAddress, provider } = useWalletStore();
+  const [ownedItems, setOwnedItems] = React.useState<Set<number>>(new Set());
+  const [selectedFrame, setSelectedFrame] = React.useState<number>(0);
+
+  const ITEMS = [
+    { id: 1, name: "Frame 1", img: "/avatar-frames/frame-1.svg" },
+    { id: 2, name: "Frame 2", img: "/avatar-frames/frame-2.svg" },
+    { id: 3, name: "Frame 3", img: "/avatar-frames/frame-3.svg" },
+    { id: 4, name: "Frame 4", img: "/avatar-frames/frame-4.svg" },
+  ];
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("selectedFrame");
+    if (saved) setSelectedFrame(Number(saved));
+  }, []);
+
+  React.useEffect(() => {
+    const checkOwnership = async () => {
+      if (!walletAddress || !provider) return;
+      try {
+        const shop = await getShopContract(provider);
+        const owned = new Set<number>();
+        for (const item of ITEMS) {
+          const hasPurchased = await shop.hasPurchased(walletAddress, item.id);
+          if (hasPurchased) owned.add(item.id);
+        }
+        setOwnedItems(owned);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    checkOwnership();
+  }, [walletAddress, provider]);
+
+  const handleSelect = (id: number) => {
+    setSelectedFrame(id);
+    localStorage.setItem("selectedFrame", String(id));
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* None Option */}
+      <div
+        onClick={() => handleSelect(0)}
+        className={`cursor-pointer rounded-xl border-2 p-2 flex flex-col items-center gap-2 transition hover:bg-gray-50
+                    ${selectedFrame === 0 ? "border-green-500 bg-green-50" : "border-gray-200"}`}
+      >
+        <div className="h-16 w-16 rounded-full bg-gray-200"></div>
+        <span className="text-sm font-bold">None</span>
+      </div>
+
+      {ITEMS.map(item => (
+        <div
+          key={item.id}
+          onClick={() => ownedItems.has(item.id) && handleSelect(item.id)}
+          className={`relative rounded-xl border-2 p-2 flex flex-col items-center gap-2 transition 
+                        ${selectedFrame === item.id ? "border-green-500 bg-green-50" : "border-gray-200"}
+                        ${!ownedItems.has(item.id) ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer hover:bg-gray-50"}
+                    `}
+        >
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+            <img src={item.img} className="absolute -left-2 -top-2 h-20 w-20 max-w-none" />
+          </div>
+          <span className="text-sm font-bold">{item.name}</span>
+          {!ownedItems.has(item.id) && <span className="text-xs text-red-500 font-bold">LOCKED</span>}
+        </div>
+      ))}
     </div>
   );
 };

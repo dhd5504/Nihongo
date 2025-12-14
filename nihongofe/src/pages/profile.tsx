@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import type { NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BottomBar } from "~/components/BottomBar";
 import { LeftBar } from "~/components/LeftBar";
 import {
@@ -16,6 +16,7 @@ import {
 } from "~/components/Svgs";
 import { getProfile } from "~/db/queries";
 import { getToken, manualParsedCoolies } from "~/utils/JWTService";
+import { useWalletStore } from "~/stores/useWalletStore";
 
 // Define the type for the user data
 export interface UserData {
@@ -63,6 +64,8 @@ const ProfileTopBar = () => {
 const ProfileTopSection = ({ userData }: { userData: UserData }) => {
   const router = useRouter();
   const loggedIn = getToken; // Replace with your logic for checking if user is logged in
+  const { walletAddress, connectWallet, disconnectWallet } = useWalletStore();
+  const [frameInfo, setFrameInfo] = useState<{ id: number; img: string } | null>(null);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -70,12 +73,29 @@ const ProfileTopSection = ({ userData }: { userData: UserData }) => {
     }
   }, [loggedIn, router]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedFrame");
+    if (saved) {
+      const id = Number(saved);
+      if (id > 0) {
+        setFrameInfo({ id, img: `/avatar-frames/frame-${id}.svg` });
+      }
+    }
+  }, []);
+
   const { name, phone, email } = userData;
 
   return (
     <section className="flex flex-row-reverse items-center border-b-2 border-gray-200 pb-8 md:flex-row md:gap-8">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-gray-400 text-3xl font-bold text-gray-400 md:h-44 md:w-44 md:text-7xl">
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-gray-400 text-3xl font-bold text-gray-400 md:h-44 md:w-44 md:text-7xl">
         {name.charAt(0).toUpperCase()}
+        {frameInfo && (
+          <img
+            src={frameInfo.img}
+            alt="Avatar Frame"
+            className="absolute -left-2 -top-2 h-24 w-24 max-w-none md:-left-4 md:-top-4 md:h-52 md:w-52 pointer-events-none"
+          />
+        )}
       </div>
       <div className="flex grow flex-col justify-between gap-3">
         <div className="flex flex-col gap-2">
@@ -84,6 +104,18 @@ const ProfileTopSection = ({ userData }: { userData: UserData }) => {
             <div className="mt-5 text-sm text-gray-400">Phone: {phone}</div>
             <div className="text-sm text-gray-400">Email: {email}</div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={walletAddress ? disconnectWallet : connectWallet}
+            className={`rounded-xl px-4 py-2 font-bold text-white transition ${walletAddress ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+              }`}
+          >
+            {walletAddress
+              ? `Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+              : "Connect Wallet"}
+          </button>
         </div>
       </div>
       <Link
