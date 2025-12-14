@@ -24,7 +24,10 @@ jobs:
           cache: maven
 
       - name: Build (skip tests)
-        run: ./mvnw -B -DskipTests package
+        run: |
+          sed -i 's/\r$//' mvnw
+          chmod +x mvnw
+          ./mvnw -B -DskipTests package
 
   frontend:
     name: Frontend build
