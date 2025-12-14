@@ -13,7 +13,7 @@ const Register: NextPage = () => {
     if (userId) {
       setUserLevel(userId, level).then((result) => {
         if (result === "Update successful") {
-          void router.push("/learn");
+          void router.push(`/level?level=${level}`);
         }
       });
     }

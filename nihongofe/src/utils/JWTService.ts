@@ -1,69 +1,69 @@
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
-// Định nghĩa interface cho Payload của JWT
 export interface JwtPayload {
   id: number;
   role: string;
+  exp?: number;
 }
 
-// Lấy token từ cookies
 export function getToken() {
-  const token = Cookies.get("token"); // Sử dụng cookies thay vì localStorage
-  return token;
+  return Cookies.get("token");
 }
 
-// Xóa token khỏi cookies
 export function removeToken() {
-  Cookies.remove("token"); // Xóa token khỏi cookies
+  Cookies.remove("token");
+  Cookies.remove("uid");
 }
 
-// Kiểm tra xem token có hết hạn không
 export function isTokenExpired(token: string) {
-  const decodedToken = jwtDecode(token);
-
-  if (!decodedToken.exp) {
-    // Token không có thời gian hết hạn (exp)
-    return false;
-  }
-
-  const currentTime = Date.now() / 1000; // Thời gian hiện tại tính bằng giây
+  const decodedToken = jwtDecode<JwtPayload>(token);
+  if (!decodedToken.exp) return false;
+  const currentTime = Date.now() / 1000;
   return currentTime > decodedToken.exp;
 }
 
-// Kiểm tra xem có token trong cookies không
 export function isToken() {
-  const token = Cookies.get("token"); // Lấy token từ cookies
-  return token ? true : false; // Nếu có token thì trả về true
+  const token = Cookies.get("token");
+  return !!token;
 }
 
-// Lấy username từ token trong cookies
 export function getUsernameByToken() {
-  const token = Cookies.get("token"); // Lấy token từ cookies
+  const token = Cookies.get("token");
   if (token) {
-    return jwtDecode(token).sub; // Giải mã và lấy sub (username) từ token
+    return jwtDecode(token).sub as string;
   }
   return null;
 }
 
-// Lấy ID người dùng từ token trong cookies
 export function getIdUserByToken() {
-  const token = Cookies.get("token"); // Lấy token từ cookies
-  if (token) {
-    const decodedToken = jwtDecode<JwtPayload>(token) as JwtPayload;
-    return decodedToken.id; // Lấy ID người dùng từ token
-  }
-  return null;
+  const uid = Cookies.get("uid");
+  if (uid) return Number(uid);
+
+  const token = Cookies.get("token");
+  if (!token) return null;
+
+  const decodedToken = jwtDecode<JwtPayload>(token) as JwtPayload;
+  return decodedToken.id;
 }
 
-// Đăng xuất (xóa token khỏi cookies và chuyển hướng người dùng)
 export function logout(navigate: any) {
-  Cookies.remove("token"); // Xóa token khỏi cookies
-  navigate("/"); // Chuyển hướng về trang chủ (hoặc bất kỳ trang nào bạn muốn)
+  fetch("http://localhost:8080/account/logout", {
+    method: "POST",
+    credentials: "include",
+  })
+    .catch(() => {
+      // ignore network errors, still clear client cookies
+    })
+    .finally(() => {
+      Cookies.remove("token");
+      Cookies.remove("uid");
+      navigate("/");
+    });
 }
 
 export function setToken(token: string) {
-  // Lưu token vào cookie, thiết lập thời gian hết hạn là 1 ngày
+  // kept for backward compatibility; avoid using when HttpOnly cookie is set from server
   Cookies.set("token", token, { expires: 1, secure: true, sameSite: "Strict" });
 }
 
@@ -74,6 +74,6 @@ export function manualParsedCoolies(cookies: string) {
       const [key, value] = cookie.split("=");
       acc[key] = value;
       return acc;
-    }, {});
+    }, {} as Record<string, string>);
   return parsedCookies;
 }

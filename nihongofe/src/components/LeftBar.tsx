@@ -7,7 +7,7 @@ import type { LoginScreenState } from "./LoginScreen";
 import { LoginScreen } from "./LoginScreen";
 import { GlobeIconSvg, PodcastIconSvg } from "./Svgs";
 import { useBoundStore } from "src/hooks/useBoundStore";
-import Cookies from "js-cookie";
+import { logout } from "~/utils/JWTService";
 
 const LeftBarMoreMenuSvg = (props: ComponentProps<"svg">) => {
   return (
@@ -30,8 +30,9 @@ const LeftBarMoreMenuSvg = (props: ComponentProps<"svg">) => {
 export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
   const loggedIn = useBoundStore((x) => x.loggedIn);
   const logOut = () => {
-    Cookies.remove("token");
-    window.location.href = "/";
+    logout(() => {
+      window.location.href = "/";
+    });
   };
   const [moreMenuShown, setMoreMenuShown] = useState(false);
   const [loginScreenState, setLoginScreenState] =
