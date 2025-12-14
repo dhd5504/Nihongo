@@ -7,9 +7,32 @@ import { FeedWrapper } from "~/components/feedwrapper";
 import { getUnits, getUserProgress } from "~/db/queries";
 import { Header } from "~/components/header";
 import { Unit } from "~/components/unit";
-import { NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { manualParsedCoolies } from "~/utils/JWTService";
 import { jwtDecode } from "jwt-decode";
+
+type LearnPageProps = {
+  userProgress: {
+    points: number;
+    lessonPercentage: number;
+  };
+  units: {
+    id: number;
+    order: number;
+    displayOrder?: number;
+    title: string;
+    description: string;
+    level: string;
+    lessons: {
+      id: number;
+      order: number;
+      name: string;
+      type: string;
+      status: string;
+    }[];
+  }[];
+  level: string;
+};
 
 const levelOrder: Record<string, number> = {
   N5: 1,
@@ -19,7 +42,7 @@ const levelOrder: Record<string, number> = {
   N1: 5,
 };
 
-const LearnPage: NextPage = ({ userProgress, units, level }) => {
+const LearnPage: NextPage<LearnPageProps> = ({ userProgress, units, level }) => {
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar />
@@ -35,7 +58,8 @@ const LearnPage: NextPage = ({ userProgress, units, level }) => {
                 (unitFirst, unitLast) =>
                   (levelOrder[unitFirst.level] ?? 99) -
                     (levelOrder[unitLast.level] ?? 99) ||
-                  unitFirst.displayOrder - unitLast.displayOrder,
+                  (unitFirst.displayOrder ?? 0) -
+                    (unitLast.displayOrder ?? 0),
               )
               .map(
                 (unit: {
@@ -105,8 +129,8 @@ const LearnPage: NextPage = ({ userProgress, units, level }) => {
 
 export default LearnPage;
 
-export async function getServerSideProps({ req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 

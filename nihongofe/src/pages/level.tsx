@@ -1,4 +1,4 @@
-import { NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { jwtDecode } from "jwt-decode";
 import { BottomBar } from "~/components/BottomBar";
 import { LeftBar } from "~/components/LeftBar";
@@ -75,8 +75,11 @@ const LevelPage: NextPage<{
 
 export default LevelPage;
 
-export async function getServerSideProps({ req, query }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({
+  req,
+  query,
+}: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
   const parsedCookies = manualParsedCoolies(cookies);
   const token = parsedCookies["token"] || null;
 
