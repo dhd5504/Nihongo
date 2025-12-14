@@ -8,6 +8,7 @@ import { LoginScreen } from "./LoginScreen";
 import { GlobeIconSvg, PodcastIconSvg } from "./Svgs";
 import { useBoundStore } from "src/hooks/useBoundStore";
 import { logout } from "~/utils/JWTService";
+import { ChatBotIcon } from "./ChatBotIcon";
 
 const LeftBarMoreMenuSvg = (props: ComponentProps<"svg">) => {
   return (
@@ -47,7 +48,7 @@ export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
           href="/learn"
           className="mb-5 ml-5 mt-5 hidden text-3xl font-bold text-[#58cc02] lg:block"
         >
-          nihongo
+          Nihongo
         </Link>
         <ul className="flex flex-col items-stretch gap-3">
           {bottomBarItems.map((item) => {
@@ -73,6 +74,15 @@ export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
               </li>
             );
           })}
+          <li className="flex flex-1">
+            <Link
+              href="/chat"
+              className="flex grow items-center gap-3 rounded-xl px-2 py-1 text-sm font-bold uppercase text-gray-400 hover:bg-gray-100"
+            >
+              <ChatBotIcon className="h-10 w-10" />
+              <span className="sr-only lg:not-sr-only">Chat Bot AI</span>
+            </Link>
+          </li>
           <div
             className="relative flex grow cursor-default items-center gap-3 rounded-xl px-2 py-1 font-bold uppercase text-gray-400 hover:bg-gray-100"
             onClick={() => setMoreMenuShown((x) => !x)}

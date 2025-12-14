@@ -17,6 +17,7 @@ type LessonButtonProps = {
   locked?: boolean;
   current?: boolean;
   percentage: number;
+  lessonType?: string;
 };
 
 export const LessonButton = ({
@@ -26,6 +27,7 @@ export const LessonButton = ({
   locked,
   current,
   percentage,
+  lessonType,
 }: LessonButtonProps) => {
   const cycleLength = 8;
   const cycleIndex = index % cycleLength;
@@ -45,13 +47,23 @@ export const LessonButton = ({
   const Icon = isCompleted ? Check : isLast ? Crown : Star;
 
   let link = `/lesson/${id}`;
-
-  if (isFirst) {
-    link += "?type=FLASHCARD";
-  } else if (isLast) {
-    link += "?type=MULTIPLE_CHOICE&state=test";
+  const normalizedType = lessonType?.toUpperCase();
+  if (normalizedType) {
+    if (normalizedType === "TEST") {
+      link += "?type=MULTIPLE_CHOICE&state=test";
+    } else if (normalizedType === "MULTIPLE_CHOICE" && isLast) {
+      link += "?type=MULTIPLE_CHOICE&state=test";
+    } else {
+      link += `?type=${normalizedType}`;
+    }
   } else {
-    link += "?type=MULTIPLE_CHOICE";
+    if (isFirst) {
+      link += "?type=FLASHCARD";
+    } else if (isLast) {
+      link += "?type=MULTIPLE_CHOICE&state=test";
+    } else {
+      link += "?type=MULTIPLE_CHOICE";
+    }
   }
 
   return (

@@ -72,7 +72,10 @@ export function manualParsedCoolies(cookies: string) {
     .split("; ")
     .reduce((acc, cookie) => {
       const [key, value] = cookie.split("=");
-      acc[key] = value;
+      if (!key) {
+        return acc;
+      }
+      acc[key] = value ?? "";
       return acc;
     }, {} as Record<string, string>);
   return parsedCookies;

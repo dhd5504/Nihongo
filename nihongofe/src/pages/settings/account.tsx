@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import type { NextPage } from "next";
+import type { GetServerSidePropsContext, NextPage } from "next";
 import { useState } from "react";
 import { BottomBar } from "~/components/BottomBar";
 import { LeftBar } from "~/components/LeftBar";
@@ -226,8 +226,8 @@ const AvatarFramesSelector = () => {
 
 export default Account;
 
-export async function getServerSideProps({ req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 

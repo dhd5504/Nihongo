@@ -1,4 +1,4 @@
-import { type NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { GlobeSvg } from "~/components/Svgs";
 import React from "react";
 import { LanguageHeader } from "~/components/LanguageHeader";
@@ -44,8 +44,8 @@ const Home: NextPage = () => {
 
 export default Home;
 
-export function getServerSideProps({ req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export function getServerSideProps({ req }: GetServerSidePropsContext) {
+  const cookies = String(req.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 

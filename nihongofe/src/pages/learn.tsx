@@ -7,11 +7,42 @@ import { FeedWrapper } from "~/components/feedwrapper";
 import { getUnits, getUserProgress } from "~/db/queries";
 import { Header } from "~/components/header";
 import { Unit } from "~/components/unit";
-import { NextPage } from "next";
+import { type GetServerSidePropsContext, type NextPage } from "next";
 import { manualParsedCoolies } from "~/utils/JWTService";
 import { jwtDecode } from "jwt-decode";
 
-const LearnPage: NextPage = ({ userProgress, units }) => {
+type LearnPageProps = {
+  userProgress: {
+    points: number;
+    lessonPercentage: number;
+  };
+  units: {
+    id: number;
+    order: number;
+    displayOrder?: number;
+    title: string;
+    description: string;
+    level: string;
+    lessons: {
+      id: number;
+      order: number;
+      name: string;
+      type: string;
+      status: string;
+    }[];
+  }[];
+  level: string;
+};
+
+const levelOrder: Record<string, number> = {
+  N5: 1,
+  N4: 2,
+  N3: 3,
+  N2: 4,
+  N1: 5,
+};
+
+const LearnPage: NextPage<LearnPageProps> = ({ userProgress, units, level }) => {
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar />
@@ -25,7 +56,10 @@ const LearnPage: NextPage = ({ userProgress, units }) => {
             {units
               .sort(
                 (unitFirst, unitLast) =>
-                  unitFirst.displayOrder - unitLast.displayOrder,
+                  (levelOrder[unitFirst.level] ?? 99) -
+                    (levelOrder[unitLast.level] ?? 99) ||
+                  (unitFirst.displayOrder ?? 0) -
+                    (unitLast.displayOrder ?? 0),
               )
               .map(
                 (unit: {
@@ -33,6 +67,7 @@ const LearnPage: NextPage = ({ userProgress, units }) => {
                   order: number;
                   description: string;
                   title: string;
+                  level: string;
                   lessons: {
                     id: number;
                     order: number;
@@ -94,12 +129,13 @@ const LearnPage: NextPage = ({ userProgress, units }) => {
 
 export default LearnPage;
 
-export async function getServerSideProps({ req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 
   const myCookie = parsedCookies["token"] || null;
+  const levelCookie = parsedCookies["level"] || null;
 
   if (!myCookie) {
     return {
@@ -118,6 +154,14 @@ export async function getServerSideProps({ req }) {
     getUnits(jwtPayload.id),
   ]);
 
+  const filteredUnits =
+    levelCookie != null && levelCookie !== ""
+      ? units.filter(
+          (unit: { level: string }) =>
+            unit.level?.toUpperCase() === levelCookie.toUpperCase(),
+        )
+      : units;
+
   if (!userProgress) {
     return {
       redirect: {
@@ -129,7 +173,8 @@ export async function getServerSideProps({ req }) {
   return {
     props: {
       userProgress,
-      units,
+      units: filteredUnits,
+      level: levelCookie ?? "",
     },
   };
 }

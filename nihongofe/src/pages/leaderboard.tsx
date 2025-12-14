@@ -63,9 +63,15 @@ const LeaderboardProfile = ({
   );
 };
 
+type Experience = {
+  userId: number;
+  name: string;
+  exp: number;
+};
+
 const Leaderboard: NextPage = () => {
   const [selectedTab, setSelectedTab] = useState("N1");
-  const [experiences, setExperiences] = useState([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
   const leaderboardLeague = "Bảng xếp hạng";
 
@@ -75,7 +81,7 @@ const Leaderboard: NextPage = () => {
 
   const fetching = async (level: string) => {
     const exs = await experienceByLevel(level);
-    setExperiences(exs);
+    setExperiences(exs ?? []);
   };
 
   useEffect(() => {

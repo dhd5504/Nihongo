@@ -22,4 +22,13 @@ public class UserProgressController {
     public ResponseEntity<UserProgressDTO> getHighestCompletedLesson(@PathVariable Integer userId) {
         return userProgressService.getHighestCompletedLessonByUserId(userId);
     }
+
+    @PostMapping("/add-xp")
+    public ResponseEntity<Integer> addXp(
+            @RequestParam Integer userId,
+            @RequestParam Integer lessonId,
+            @RequestParam Integer score
+    ) {
+        return userProgressService.addXp(userId, lessonId, score);
+    }
 }

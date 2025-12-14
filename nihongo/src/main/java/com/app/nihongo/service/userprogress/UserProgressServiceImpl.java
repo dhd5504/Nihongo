@@ -50,4 +50,21 @@ public class UserProgressServiceImpl implements UserProgressService {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @Override
+    public ResponseEntity<Integer> addXp(Integer userId, Integer lessonId, Integer score) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+
+        UserProgress userProgress = new UserProgress();
+        userProgress.setUser(user);
+        userProgress.setLesson(lesson);
+        userProgress.setScore(score);
+        userProgressRepository.save(userProgress);
+
+        Integer totalScore = userProgressRepository.sumScoreByUserId(userId);
+        return ResponseEntity.ok(totalScore);
+    }
 }

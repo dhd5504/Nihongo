@@ -10,6 +10,7 @@ type UnitProps = {
     id: number;
     order: number;
     status: string; // current, completed, locked
+    type?: string;
   }[];
   activeLesson:
     | {
@@ -55,6 +56,7 @@ export const Unit = ({
               current={isCurrent}
               locked={isLocked}
               percentage={activeLessonPercentage}
+              lessonType={lesson.type}
             />
           );
         })}

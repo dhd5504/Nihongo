@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import type { NextPage } from "next";
+import type { GetServerSidePropsContext, NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -226,8 +226,8 @@ const ProfileStatsSection = ({ userXP }: { userXP: number }) => {
   );
 };
 
-export async function getServerSideProps({ req }) {
-  const cookies = String(req?.headers?.cookie) ?? "";
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  const cookies = String(req?.headers?.cookie ?? "");
 
   const parsedCookies = manualParsedCoolies(cookies);
 
