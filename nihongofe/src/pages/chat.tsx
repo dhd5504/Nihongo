@@ -25,8 +25,8 @@ const ChatPage: NextPage = () => {
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
-
-    const nextMessages = [...messages, { role: "user", text: trimmed }];
+    const userMessage: Message = { role: "user", text: trimmed };
+    const nextMessages: Message[] = [...messages, userMessage];
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
