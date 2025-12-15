@@ -11,6 +11,7 @@ export const env = createEnv({
     CLOUDINARY_CLOUD_NAME: z.string().default("dqqi1d63n"),
     CLOUDINARY_API_KEY: z.string().default("796161318595991"),
     CLOUDINARY_API_SECRET: z.string().default("cI9h1v1GutKz_F8Fxz5MbRMlmaw"),
+    GEMINI_API_KEY: z.string().default("AIzaSyDfCZ3jaJHinY63HBNPMZMRquzx1LStYQQ"),
   },
 
   /**
