@@ -30,6 +30,12 @@ const config = {
         port: "",
         pathname: "/100/100",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

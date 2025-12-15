@@ -31,17 +31,20 @@ export const updateProfile = async ({
   name,
   phoneNumber,
   password,
+  avatar,
 }: {
   userId: number;
   name: string;
   phoneNumber: string;
   password: string;
+  avatar?: string | null;
 }) => {
   return await axios.put(`${API_BASE_URL}/api/user/update-info`, {
     userId,
     name,
     phoneNumber,
     password,
+    avatar,
   });
 };
 
@@ -52,6 +55,7 @@ export const getProfile = async (userId: number) => {
       userXP: number;
       phone: string;
       email: string;
+      avatar?: string | null;
     }>(`${API_BASE_URL}/api/user/info/${userId}`);
 
     return response.data;
@@ -61,6 +65,7 @@ export const getProfile = async (userId: number) => {
       userXP: 0,
       phone: "",
       email: "",
+      avatar: "",
     };
   }
 };

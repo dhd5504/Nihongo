@@ -16,10 +16,12 @@ const Shop: NextPage = () => {
 
   const { walletAddress, provider } = useWalletStore();
   const { addToast } = useToast();
-  const [ownedItems, setOwnedItems] = React.useState<Set<number>>(new Set());
+  const [ownedItems, setOwnedItems] = React.useState<Set<number>>(
+    new Set([1]), // Frame 1 is always free/owned
+  );
 
   const ITEMS = [
-    { id: 1, name: "Frame 1", price: "20", img: "/avatar-frames/frame-1.svg", desc: "A cool blue frame." },
+    { id: 1, name: "Frame 1", price: "0", img: "/avatar-frames/frame-1.svg", desc: "A cool blue frame (FREE)." },
     { id: 2, name: "Frame 2", price: "20", img: "/avatar-frames/frame-2.svg", desc: "A fiery red frame." },
     { id: 3, name: "Frame 3", price: "30", img: "/avatar-frames/frame-3.svg", desc: "A nature green frame." },
     { id: 4, name: "Frame 4", price: "30", img: "/avatar-frames/frame-4.svg", desc: "A golden luxury frame." },
@@ -34,7 +36,7 @@ const Shop: NextPage = () => {
         if (!shop || typeof shop.hasPurchased !== "function") {
           return;
         }
-        const owned = new Set<number>();
+        const owned = new Set<number>([1]); // Frame 1 is free
         for (const item of ITEMS) {
           const hasPurchased = await shop.hasPurchased(walletAddress, item.id);
           if (hasPurchased) owned.add(item.id);
@@ -48,6 +50,12 @@ const Shop: NextPage = () => {
   }, [walletAddress, provider]);
 
   const handleBuy = async (itemId: number, price: string, itemName: string) => {
+    if (price === "0") {
+      setOwnedItems(prev => new Set(prev).add(itemId));
+      addToast(`You now own ${itemName}!`, "success");
+      return;
+    }
+
     if (!walletAddress || !provider) {
       addToast("Please connect wallet first!", "error");
       return;
@@ -182,7 +190,11 @@ const Shop: NextPage = () => {
                         ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed"
                         : "bg-purple-100 text-purple-600 border-purple-200 hover:bg-purple-200"}`}
                   >
-                    {ownedItems.has(item.id) ? "OWNED" : `BUY: ${item.price} NIHON`}
+                    {ownedItems.has(item.id)
+                      ? "OWNED"
+                      : item.price === "0"
+                        ? "FREE"
+                        : `BUY: ${item.price} NIHON`}
                   </button>
                 </section>
               </div>

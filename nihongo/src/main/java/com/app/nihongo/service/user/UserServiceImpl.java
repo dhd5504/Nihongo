@@ -130,8 +130,9 @@ public class UserServiceImpl implements UserService {
                     (user.getLastName() != null ? user.getLastName() : "");
             String phone = user.getPhoneNumber();
             String email = user.getEmail();
+            String avatar = user.getAvatar();
 
-            UserInfoDTO userInfo = new UserInfoDTO(name.trim(), userXP, phone, email);
+            UserInfoDTO userInfo = new UserInfoDTO(name.trim(), userXP, phone, email, avatar);
 
             return ResponseEntity.ok(userInfo);
         } else {
@@ -159,6 +160,9 @@ public class UserServiceImpl implements UserService {
         if (!userUpdateDTO.getPassword().equals("")) {
             String encryptedPassword = passwordEncoder.encode(userUpdateDTO.getPassword());
             user.setPassword(encryptedPassword);
+        }
+        if (userUpdateDTO.getAvatar() != null) {
+            user.setAvatar(userUpdateDTO.getAvatar());
         }
 
         userRepository.save(user);

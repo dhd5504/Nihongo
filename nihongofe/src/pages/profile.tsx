@@ -26,6 +26,7 @@ export interface UserData {
   userXP: number;
   phone: string;
   email: string;
+  avatar?: string | null;
 }
 
 const Profile: NextPage<{
@@ -81,16 +82,28 @@ const ProfileTopSection = ({ userData }: { userData: UserData }) => {
       const id = Number(saved);
       if (id > 0) {
         setFrameInfo({ id, img: `/avatar-frames/frame-${id}.svg` });
+      } else {
+        setFrameInfo(null);
       }
+    } else {
+      setFrameInfo(null);
     }
   }, []);
 
-  const { name, phone, email } = userData;
+  const { name, phone, email, avatar } = userData;
 
   return (
     <section className="flex flex-row-reverse items-center border-b-2 border-gray-200 pb-8 md:flex-row md:gap-8">
       <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-gray-400 text-3xl font-bold text-gray-400 md:h-44 md:w-44 md:text-7xl">
-        {name.charAt(0).toUpperCase()}
+        {avatar ? (
+          <img
+            src={avatar}
+            alt={`${name} avatar`}
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          (name.charAt(0) || "?").toUpperCase()
+        )}
         {frameInfo && (
           <img
             src={frameInfo.img}
