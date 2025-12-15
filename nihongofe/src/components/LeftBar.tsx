@@ -10,6 +10,8 @@ import { useBoundStore } from "src/hooks/useBoundStore";
 import { logout } from "~/utils/JWTService";
 import { ChatBotIcon } from "./ChatBotIcon";
 
+type SidebarTab = Tab | "Chat Bot AI";
+
 const LeftBarMoreMenuSvg = (props: ComponentProps<"svg">) => {
   return (
     <svg width="46" height="46" viewBox="0 0 46 46" fill="none" {...props}>
@@ -28,7 +30,11 @@ const LeftBarMoreMenuSvg = (props: ComponentProps<"svg">) => {
   );
 };
 
-export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
+export const LeftBar = ({
+  selectedTab,
+}: {
+  selectedTab: SidebarTab | null;
+}) => {
   const loggedIn = useBoundStore((x) => x.loggedIn);
   const logOut = () => {
     logout(() => {
@@ -40,6 +46,7 @@ export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
     useState<LoginScreenState>("HIDDEN");
 
   const bottomBarItems = useBottomBarItems();
+  const isChatSelected = selectedTab === "Chat Bot AI";
 
   return (
     <>
@@ -77,7 +84,12 @@ export const LeftBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
           <li className="flex flex-1">
             <Link
               href="/chat"
-              className="flex grow items-center gap-3 rounded-xl px-2 py-1 text-sm font-bold uppercase text-gray-400 hover:bg-gray-100"
+              className={[
+                "flex grow items-center gap-3 rounded-xl px-2 py-1 text-sm font-bold uppercase",
+                isChatSelected
+                  ? "border-2 border-[#84d8ff] bg-[#ddf4ff] text-blue-400"
+                  : "text-gray-400 hover:bg-gray-100",
+              ].join(" ")}
             >
               <ChatBotIcon className="h-10 w-10" />
               <span className="sr-only lg:not-sr-only">Chat Bot AI</span>

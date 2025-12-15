@@ -10,6 +10,7 @@ public class UserInfoDTO {
     private Integer userXP;
     private String phone;
     private String email;
+    private String avatar;
 
 
 }

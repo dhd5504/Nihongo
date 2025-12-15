@@ -3,11 +3,16 @@
 import { useEffect, useState, useTransition } from "react";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Confetti from "react-confetti";
 import { useAudio, useWindowSize } from "react-use";
 import Cookies from "js-cookie";
 import { usePracticeModal } from "~/store/use-practice-modal";
+import { useToast } from "~/context/toast";
+import { useWalletStore } from "~/stores/useWalletStore";
+import { getTokenContract } from "~/utils/contracts";
+import axios from "axios";
 import { useBoundStore } from "src/hooks/useBoundStore";
 
 import {
@@ -197,10 +202,62 @@ export const Quiz = ({
     }
   };
 
+  const { addToast } = useToast();
+  const { walletAddress, provider } = useWalletStore();
+
   const handleCompleted = async () => {
     const userId = getIdUserByToken();
 
     await updateStatusLesson(Number(params.lessonId), Number(userId));
+
+    // Check if score is sufficient (must be 100%)
+    if (correctQuestions !== challenges.length) {
+      addToast("Bạn cần làm đúng 100% để nhận Token!", "error");
+      if (isPractice) {
+        router.push("/practice");
+      } else {
+        router.push("/learn");
+      }
+      return;
+    }
+
+    if (walletAddress && provider) {
+      try {
+        addToast("Requesting signature...", "info");
+        const response = await axios.post("http://localhost:3001/lesson/complete", {
+          wallet: walletAddress,
+          lessonId: Number(params.lessonId),
+        });
+
+        const { signature, amount, nonce } = response.data;
+        addToast("Minting tokens...", "info");
+
+        const contract = await getTokenContract(provider);
+        if (!contract || typeof contract.mintWithSignature !== "function") {
+          addToast("Contract not ready, please reconnect wallet.", "error");
+          return;
+        }
+
+        const tx = await contract.mintWithSignature(
+          amount,
+          nonce,
+          Number(params.lessonId),
+          signature,
+        );
+        addToast("Transaction sent...", "info");
+        await tx.wait();
+        addToast("Tokens received!", "success");
+      } catch (error: any) {
+        console.error(error);
+        if (error.response && error.response.status === 400 && error.response.data.error === "Lesson already rewarded") {
+          addToast("Bạn đã nhận thưởng bài này rồi!", "info");
+        } else {
+          addToast("Minting failed: " + (error.message || "Unknown error"), "error");
+        }
+      }
+    } else {
+      addToast("Wallet not connected! No token reward.", "info");
+    }
 
     const passedTest = !(isTest && correctQuestions < challenges.length / 2);
 
