@@ -1,8 +1,6 @@
 package com.app.nihongo.config;
 
-
-
-
+import com.app.nihongo.security.Endpoints;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.Type;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +13,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @Configuration
 public class MethodRestConfig implements RepositoryRestConfigurer {
-    private String url = "http://localhost:3000";
     @Autowired
     private EntityManager entityManager;
+
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
 
@@ -29,7 +27,7 @@ public class MethodRestConfig implements RepositoryRestConfigurer {
 
         // cors config
         cors.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:3000")
+                .allowedOriginPatterns(Endpoints.front_end_host)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

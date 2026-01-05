@@ -66,7 +66,7 @@ public class AccountService implements IAccountService{
         String url = "http://localhost:3000/active/"+email+"/"+activeNumber;
         text+=("<br/> <a href="+url+">"+url+"</a> ");
 
-        emailService.sendMessage("tuancho1003hn@gmail.com", email, subject, text);
+        emailService.sendMessage("admmin@gmail.com", email, subject, text);
     }
 
     public ResponseEntity<?> kichHoatTaiKHoan(String email, String activeNumber) {
