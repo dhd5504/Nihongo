@@ -52,5 +52,11 @@ jobs:
       - name: Build
         env:
           NODE_ENV: production
-          SKIP_ENV_VALIDATION: "1"
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME || vars.CLOUDINARY_CLOUD_NAME || 'dummy_cloud_name' }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY || vars.CLOUDINARY_API_KEY || 'dummy_cloud_api_key' }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET || vars.CLOUDINARY_API_SECRET || 'dummy_cloud_api_secret' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || vars.GEMINI_API_KEY || 'dummy_gemini_api_key' }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL || vars.NEXT_PUBLIC_API_BASE_URL || 'https://example.com' }}
+          NEXT_PUBLIC_W3_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_W3_API_BASE_URL || vars.NEXT_PUBLIC_W3_API_BASE_URL || 'https://w3.example.com' }}
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || vars.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dummy_cloud_name' }}
         run: npm run build
