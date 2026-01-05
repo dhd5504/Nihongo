@@ -14,6 +14,7 @@ import { useWalletStore } from "~/stores/useWalletStore";
 import { getTokenContract } from "~/utils/contracts";
 import axios from "axios";
 import { useBoundStore } from "src/hooks/useBoundStore";
+import { env } from "~/env.mjs";
 
 import {
   addUserXp,
@@ -78,6 +79,8 @@ export const Quiz = ({
   const [pending, startTransition] = useTransition();
   const { open: openPracticeModal } = usePracticeModal();
   const increaseXp = useBoundStore((x) => x.increaseXp);
+  const apiBaseUrl = env.NEXT_PUBLIC_API_BASE_URL;
+  const w3ApiBaseUrl = env.NEXT_PUBLIC_W3_API_BASE_URL;
 
   useEffect(() => {
     if (initialPercentage === 100) openPracticeModal();
@@ -224,7 +227,7 @@ export const Quiz = ({
     if (walletAddress && provider) {
       try {
         addToast("Requesting signature...", "info");
-        const response = await axios.post("http://localhost:3001/lesson/complete", {
+        const response = await axios.post(`${w3ApiBaseUrl}/lesson/complete`, {
           wallet: walletAddress,
           lessonId: Number(params.lessonId),
         });

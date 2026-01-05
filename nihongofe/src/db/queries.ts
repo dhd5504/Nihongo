@@ -1,7 +1,7 @@
 import axios from "axios";
+import { env } from "~/env.mjs";
 
-// const API_BASE_URL = "https://nihongo-nhom26-latest.onrender.com";
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 
 axios.defaults.withCredentials = true;
 

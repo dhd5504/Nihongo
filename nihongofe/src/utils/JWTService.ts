@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { env } from "~/env.mjs";
 
 export interface JwtPayload {
   id: number;
@@ -48,7 +49,7 @@ export function getIdUserByToken() {
 }
 
 export function logout(navigate: any) {
-  fetch("http://localhost:8080/account/logout", {
+  fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/account/logout`, {
     method: "POST",
     credentials: "include",
   })

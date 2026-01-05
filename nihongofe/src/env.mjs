@@ -8,10 +8,10 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
-    CLOUDINARY_CLOUD_NAME: z.string().default("dqqi1d63n"),
-    CLOUDINARY_API_KEY: z.string().default("796161318595991"),
-    CLOUDINARY_API_SECRET: z.string().default("cI9h1v1GutKz_F8Fxz5MbRMlmaw"),
-    GEMINI_API_KEY: z.string().default("AIzaSyDfCZ3jaJHinY63HBNPMZMRquzx1LStYQQ"),
+    CLOUDINARY_CLOUD_NAME: z.string().min(1),
+    CLOUDINARY_API_KEY: z.string().min(1),
+    CLOUDINARY_API_SECRET: z.string().min(1),
+    GEMINI_API_KEY: z.string().min(1),
   },
 
   /**
@@ -20,7 +20,9 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().default("dqqi1d63n"),
+    NEXT_PUBLIC_API_BASE_URL: z.string().url(),
+    NEXT_PUBLIC_W3_API_BASE_URL: z.string().url(),
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1),
   },
 
   /**
@@ -33,6 +35,8 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_W3_API_BASE_URL: process.env.NEXT_PUBLIC_W3_API_BASE_URL,
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   },
