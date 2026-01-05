@@ -3,13 +3,12 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-COPY pom.xml mvnw mvnw.cmd ./
+COPY pom.xml ./
 COPY .mvn .mvn
-RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
-RUN ./mvnw -B dependency:go-offline
+RUN mvn -B dependency:go-offline
 
 COPY src src
-RUN ./mvnw -B clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
