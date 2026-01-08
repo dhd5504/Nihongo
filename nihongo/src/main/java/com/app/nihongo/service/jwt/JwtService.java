@@ -27,7 +27,7 @@ public class JwtService {
     private UserService userService;
 
     // Tạo JWT dựa trên tên đang nhập
-    public String generateToken(String username){
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         User user = userService.findByUsername(username);
 
@@ -37,24 +37,28 @@ public class JwtService {
     }
 
     // Tạo JWT với các claim đã chọn
-    private  String createToken(Map<String, Object> claims, String username){
+    private String createToken(Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+30*60*1000000)) // JWT hết hạn sau 30000 phút
-                .signWith(SignatureAlgorithm.HS256,getSignKey())
+                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // JWT hết hạn sau 24 giờ
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    private Key getSignKey(){
+    private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     // Trích xuất thông tin
-    private Claims extractAllClaims(String token){
-        return Jwts.parser().setSigningKey(getSignKey()).parseClaimsJws(token).getBody();
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsFunction) {
@@ -63,30 +67,32 @@ public class JwtService {
     }
 
     // Kiểm tra tời gian hết hạn từ JWT
-    public Date extractExpiration(String token){
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     // Kiểm tra tời gian hết hạn từ JWT
-    public String extractUsername(String token){
+    public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     // Kiểm tra cái JWT đã hết hạn
-    private Boolean isTokenExpired(String token){
-//        if(extractExpiration(token).before(new Date())){
-//            System.out.println("Lỗi date ở check token");
-//        }
+    private Boolean isTokenExpired(String token) {
+        // if(extractExpiration(token).before(new Date())){
+        // System.out.println("Lỗi date ở check token");
+        // }
         return extractExpiration(token).before(new Date());
     }
 
     // Kiểm tra tính hợp lệ
-    public Boolean validateToken(String token, UserDetails userDetails){
+    public Boolean validateToken(String token, UserDetails userDetails) {
 
         final String username = extractUsername(token);
-//        System.out.println(username + " username " + userDetails.getUsername() + " validate token");
-        return (username.equals(userDetails.getUsername())&&!isTokenExpired(token));
+        // System.out.println(username + " username " + userDetails.getUsername() + "
+        // validate token");
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
     public Integer extractUserId(String token) {
         Claims claims = extractAllClaims(token);
         return (Integer) claims.get("id"); // Make sure the key matches the one used during token creation

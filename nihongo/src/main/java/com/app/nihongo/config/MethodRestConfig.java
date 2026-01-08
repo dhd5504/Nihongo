@@ -1,6 +1,5 @@
 package com.app.nihongo.config;
 
-import com.app.nihongo.security.Endpoints;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.Type;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,49 +9,32 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
-
 @Configuration
 public class MethodRestConfig implements RepositoryRestConfigurer {
-    @Autowired
-    private EntityManager entityManager;
+        @Autowired
+        private EntityManager entityManager;
 
-    @Override
-    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
+        @Override
+        public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
+                // Expose IDs for all entities
+                // Cho phép trả về id
+                config.exposeIdsFor(entityManager.getMetamodel().getEntities().stream()
+                                .map(Type::getJavaType)
+                                .toArray(Class[]::new));
 
+                // CORS is now configured in SecurityConfiguration
+                // Uncomment below to disable specific HTTP methods if needed
+                // HttpMethod[] deleteMethod = { HttpMethod.DELETE };
+                // disableHttpMethods(User.class, config, deleteMethod);
+        }
 
-        // expose ids
-        // Cho phép trả về id
-        config.exposeIdsFor(entityManager.getMetamodel().getEntities().stream().map(Type::getJavaType).toArray(Class[]::new));
-
-
-        // cors config
-        cors.addMapping("/**")
-                .allowedOriginPatterns(Endpoints.front_end_host)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-        // Chặn các methods
-//        HttpMethod[] methodsDisable ={
-//                HttpMethod.POST,
-//                HttpMethod.PUT,
-//                HttpMethod.PATCH,
-//                HttpMethod.DELETE,
-//        };
-
-        // Chặn các method DELETE
-        HttpMethod[] deleteMethod = {
-                HttpMethod.DELETE
-        };
-//        disableHttpMethods(User.class, config,deleteMethod );
-    }
-
-    private void disableHttpMethods(Class c,
-                                    RepositoryRestConfiguration config,
-                                    HttpMethod[] methods){
-        config.getExposureConfiguration()
-                .forDomainType(c)
-                .withItemExposure((metdata, httpMethods) -> httpMethods.disable(methods))
-                .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(methods));
-    }
+        @SuppressWarnings("unused")
+        private void disableHttpMethods(Class<?> c,
+                        RepositoryRestConfiguration config,
+                        HttpMethod[] methods) {
+                config.getExposureConfiguration()
+                                .forDomainType(c)
+                                .withItemExposure((metdata, httpMethods) -> httpMethods.disable(methods))
+                                .withCollectionExposure((metdata, httpMethods) -> httpMethods.disable(methods));
+        }
 }
-

@@ -45,18 +45,18 @@ const LevelPage: NextPage<{
                       activeLesson={
                         activeLesson
                           ? {
-                              id: activeLesson.id,
-                              unit: { id: unit.id },
-                              isFirst:
-                                unit.lessons.findIndex(
-                                  (l: { id: number }) => l.id === activeLesson.id,
-                                ) === 0,
-                              isLast:
-                                unit.lessons.findIndex(
-                                  (l: { id: number }) => l.id === activeLesson.id,
-                                ) ===
-                                unit.lessons.length - 1,
-                            }
+                            id: activeLesson.id,
+                            unit: { id: unit.id },
+                            isFirst:
+                              unit.lessons.findIndex(
+                                (l: { id: number }) => l.id === activeLesson.id,
+                              ) === 0,
+                            isLast:
+                              unit.lessons.findIndex(
+                                (l: { id: number }) => l.id === activeLesson.id,
+                              ) ===
+                              unit.lessons.length - 1,
+                          }
                           : undefined
                       }
                       activeLessonPercentage={userProgress.lessonPercentage}
@@ -96,9 +96,13 @@ export async function getServerSideProps({
   }>(token);
 
   const level = String(query.level ?? "");
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
   const [userProgress, units] = await Promise.all([
     getUserProgress(),
-    getUnits(jwtPayload.id),
+    getUnits(jwtPayload.id, headers),
   ]);
 
   return {

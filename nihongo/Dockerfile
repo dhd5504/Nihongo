@@ -15,5 +15,9 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+# Render provides PORT env variable dynamically
+ENV PORT=8080
+EXPOSE ${PORT}
+
+# Use shell form to expand PORT variable
+ENTRYPOINT java -Dserver.port=${PORT} -jar /app/app.jar

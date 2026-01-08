@@ -190,7 +190,11 @@ export async function getServerSideProps({
     };
   }
 
-  const practices = await getUnits(jwtPayload.id);
+  const headers = {
+    Authorization: `Bearer ${myCookie}`,
+  };
+
+  const practices = await getUnits(jwtPayload.id, headers);
 
   return {
     props: {

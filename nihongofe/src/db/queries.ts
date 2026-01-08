@@ -133,10 +133,11 @@ export const updateStatusLesson = async (lessonId: number, userId: number) => {
   }
 };
 
-export const getUnits = async (userId: number): Promise<Unit[]> => {
+export const getUnits = async (userId: number, headers?: Record<string, string>): Promise<Unit[]> => {
   try {
     const response = await axios.get<Unit[]>(
       `${API_BASE_URL}/api/units?userId=${userId}`,
+      headers ? { headers } : {}
     );
     return response.data ?? [];
   } catch (error) {
@@ -144,6 +145,7 @@ export const getUnits = async (userId: number): Promise<Unit[]> => {
     throw error;
   }
 };
+
 export const getLessonById = async (lessonId: number) => {
   const response = await axios.get(`${API_BASE_URL}/lessons/${lessonId}`);
   return response.data;

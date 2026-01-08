@@ -57,9 +57,9 @@ const LearnPage: NextPage<LearnPageProps> = ({ userProgress, units, level }) => 
               .sort(
                 (unitFirst, unitLast) =>
                   (levelOrder[unitFirst.level] ?? 99) -
-                    (levelOrder[unitLast.level] ?? 99) ||
+                  (levelOrder[unitLast.level] ?? 99) ||
                   (unitFirst.displayOrder ?? 0) -
-                    (unitLast.displayOrder ?? 0),
+                  (unitLast.displayOrder ?? 0),
               )
               .map(
                 (unit: {
@@ -103,11 +103,11 @@ const LearnPage: NextPage<LearnPageProps> = ({ userProgress, units, level }) => 
                         activeLesson={
                           activeLesson
                             ? {
-                                id: activeLesson.id,
-                                unit: { id: unit.id },
-                                isFirst: isFirst,
-                                isLast: isLast,
-                              }
+                              id: activeLesson.id,
+                              unit: { id: unit.id },
+                              isFirst: isFirst,
+                              isLast: isLast,
+                            }
                             : undefined
                         }
                         activeLessonPercentage={userProgress.lessonPercentage}
@@ -149,17 +149,22 @@ export async function getServerSideProps({ req }: GetServerSidePropsContext) {
     id: number;
   }>(myCookie);
 
+  // Send JWT token via Authorization header for server-side authentication
+  const headers = {
+    Authorization: `Bearer ${myCookie}`,
+  };
+
   const [userProgress, units] = await Promise.all([
     getUserProgress(),
-    getUnits(jwtPayload.id),
+    getUnits(jwtPayload.id, headers),
   ]);
 
   const filteredUnits =
     levelCookie != null && levelCookie !== ""
       ? units.filter(
-          (unit: { level: string }) =>
-            unit.level?.toUpperCase() === levelCookie.toUpperCase(),
-        )
+        (unit: { level: string }) =>
+          unit.level?.toUpperCase() === levelCookie.toUpperCase(),
+      )
       : units;
 
   if (!userProgress) {
