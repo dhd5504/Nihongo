@@ -7,11 +7,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +27,9 @@ public class JwtService {
 
     @Autowired
     private UserService userService;
+
+    private Key signingKey;
+    private SignatureAlgorithm signingAlgorithm;
 
     // Tạo JWT dựa trên tên đang nhập
     public String generateToken(String username) {
@@ -43,13 +48,15 @@ public class JwtService {
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // JWT hết hạn sau 24 giờ
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .signWith(getSignKey(), signingAlgorithm)
                 .compact();
     }
 
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        if (signingKey == null) {
+            throw new IllegalStateException("JWT signing key has not been initialized.");
+        }
+        return signingKey;
     }
 
     // Trích xuất thông tin
@@ -59,6 +66,25 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    @PostConstruct
+    private void init() {
+        byte[] keyBytes = decodeSecret(secret);
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        this.signingAlgorithm = SignatureAlgorithm.forSigningKey(signingKey);
+    }
+
+    private byte[] decodeSecret(String secretValue) {
+        if (secretValue == null || secretValue.isBlank()) {
+            throw new IllegalStateException("JWT secret must be configured and cannot be blank.");
+        }
+
+        try {
+            return Decoders.BASE64.decode(secretValue.trim());
+        } catch (IllegalArgumentException ignored) {
+            return secretValue.getBytes(StandardCharsets.UTF_8);
+        }
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsFunction) {
